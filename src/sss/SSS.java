@@ -49,11 +49,17 @@ public class SSS {
 	//función que retorne máxima distancia entre dos elementos
 	public static int maximaDistancia(ArrayList<String> objetos){
 		int max=0;
+		ArrayList<String> mostrar = new ArrayList();
+		String temp;
+		int distTemp;
 		for(int j=0;j<objetos.size();j++){
 			for(int i=0;i<objetos.size();i++){
-				if(j>i){
-					if(levenshteinDistance(objetos.get(i),objetos.get(j))>max){
-						max=levenshteinDistance(objetos.get(i),objetos.get(j));
+				if(i>j){
+					distTemp = levenshteinDistance(objetos.get(i),objetos.get(j));
+					/*temp = objetos.get(i)+" "+objetos.get(j);
+					System.out.println(temp+" "+distTemp);*/
+					if(distTemp>max){
+						max=distTemp;
 					}
 				}
 			}
@@ -63,15 +69,19 @@ public class SSS {
 	
 	//función que retorna una lista de pivotes
 	//necesita la lista de los elementos (objetos), distancia máxima (M)
-	//y un alpha experimental (entre 0 y 1)
-	public static ArrayList<String> seleccionPivotes(ArrayList<String> objetos, int M, double alpha){
+	//y un alpha "a" experimental (a entre 0 y 1)
+	public static ArrayList<String> seleccionPivotes(ArrayList<String> objetos, int M, double a){
 		ArrayList<String> pivotes= new ArrayList<String>();
+		ArrayList<String> tempPivotes= new ArrayList<String>();
+		int distP;
+		double ma = M*a;
 		pivotes.add(objetos.get(0));
-		for(int i=0;i<objetos.size();i++){
-			String x = objetos.get(i);
-			for(int j=0;j<pivotes.size();j++){
-				String p = pivotes.get(j);
-				if(levenshteinDistance(x,p)>(M*alpha)){
+		tempPivotes.add(objetos.get(0));
+		for(String x: objetos){
+			for(int i=0;i<pivotes.size();i++){
+				String p = pivotes.get(i);
+				distP=levenshteinDistance(x,p);
+				if(distP>ma){
 					pivotes.add(x);
 					//System.out.println(x);
 				}
@@ -85,28 +95,35 @@ public class SSS {
 	//la lista de pivotes (esto queda como "estático" si la base de datos no cambia)
 	//la lista de objetos(palabras) existentes (esto queda como "estático" si la base de datos no cambia)
 	//palabra a consultar (q) con su radio (r)
-	public static ArrayList<String> indiceSSS(ArrayList<String> pivotes, ArrayList<String> objetos, String q, int r){
-		int n =0;
-		ArrayList<String> objetoFinal = new ArrayList<String>();
+	public static ArrayList<String> buildSSS(ArrayList<String> pivotes, ArrayList<String> objetos, String q, int r){
 		ArrayList<Integer> dq = new ArrayList<Integer>();
-		ArrayList<String> L = new ArrayList<String>();
+		int distQP;
 		for (String p: pivotes){
-			dq.add(levenshteinDistance(q,p));
+			distQP=levenshteinDistance(q,p);
+			dq.add(distQP);
 		}
-		int i=0;
+		
+		ArrayList<String> L = new ArrayList<String>();
+		int distOP;
+		int n;
 		for(String o: objetos){
-			for(String p: pivotes){
-				if((levenshteinDistance(o,p)>(dq.get(i)-r))&&(levenshteinDistance(o,p)<(dq.get(i)+r))){
-					n++;
+			n=0;
+			for(int i=0;i<pivotes.size();i++){
+				String p = pivotes.get(i);
+				distOP=levenshteinDistance(o,p);
+				if((distOP>(dq.get(i)-r))&&(distOP<(dq.get(i)+r))){
+					n=n+1;
 				}
 			}
 			if(n==pivotes.size()){
 				L.add(o);			
 			}
 		}
-		
+		int distOQ;
+		ArrayList<String> objetoFinal = new ArrayList<String>();
 		for(String o: L){
-			if(levenshteinDistance(o,q)<=r){
+			distOQ=levenshteinDistance(o,q);
+			if(distOQ<=r){
 				objetoFinal.add(o);
 			}
 		}
@@ -115,70 +132,14 @@ public class SSS {
 	
 	public static void main(String[] args) {
 		//prueba de función de levenshtein
-		
+		String str1 = "Lollapalooza";
+		String str2 = "Lolapalooza";
+		System.out.println(levenshteinDistance(str1,str2));
 		
 		ArrayList<String> festivales = new ArrayList<String>(Arrays.asList(
 				"Lollapalooza", "Creamfields", "Fauna Primavera", 
 				"La cumbre del rock chileno", "Frontera", 
-				"Fiis 2016", "DEFQON.1",
-				"Metallica","The Strokes","The Weeknd",
-				"The XX","The Chainsmokers","Flume",
-				"Duran Duran","Two Door Cinema Club","Rancid",
-				"The 1975","G-Eazy","Melanie Martinez",
-				"Cage the Elephant","MØ","Oliver Heldens",
-				"Nervo","Catfish and the Bottlemen","Glass Animals",
-				"Griz","Vance Joy","Tegan and Sara",
-				"Don Diablo","Álex Anwandter","Bomba Estéreo",
-				"Lucybell","Tchami","Gondwana",
-				"Weichafe","Silversun Pickups","Borgore",
-				"La Pozze Latina","Alok","DJ Who",
-				"We are the Grand","Villa Cariño","Zaturno Feat. MC Piri",
-				"Mad Professor","(Me Llamo) Sebastian","López",
-				"Liricistas","Newen Afrobeat","Rootz Hifi & Macky Banton",
-				"Prehistoricos","Crizálida","Román & Castro",
-				"Mariel Mariel","DR Vena","Chicago Toys",
-				"Paz Court","Boraj","8 Monkys",
-				"Rey Puesto","Enrique Icka","Tus Amigos Nuevos",
-				"Vives&Forero","Rod Valdés","Amahiro",
-				"Tiësto","Dubfire: Live Hybrid","Apollonia",
-				"BlasterJaxx","Borgeous","Felix Jaehn",
-				"KSHMR","Lost Frequences","Marshmello",
-				"Mike Cervello","Moksi","Sam Feldt",
-				"Sven Väth","The Martinez Brothers","Yellow Claw",
-				"Youngr","Amalia Baltboltin","Inguerzon",
-				"Gisela Lindhorst","Cris Celiz","Tomás Villarroel",
-				"Frans Van Der Hoek","Hedo","Hard Condr",
-				"Tomas G","Air","Primal Scream","Courtney Barnett",
-				"Larry Gus","Ellen Allien","Tiga",
-				"Luisa Puterman","Andrea Paz","Eggglub",
-				"Los Barbara Blade","Mitú","Roisin Murphy",
-				"Matanza","IIOII","Fantasna","Guerra",
-				"La Femme","Lia Nadja","Com Truise",
-				"Mas569 & Aurelius98","Underground Resistance","Aye Aye",
-				"Camila Moreno","Edward Sharpe & The Magnetic Zeros","The Brian Jonestown Massacre",
-				"Kurt Vile ans The Violators","Trax Records Showcase","Los Tres",
-				"Chancho en Piedra","Joe Vasconcellos","Los Tetas",
-				"Nicole","Shaggy","Emir Kusturica",
-				"Mon Laferte","Perotá Chingó","Sum 41",
-				"Ataque 77","Javiera Mena","Los Cafres",
-				"Los Amigos Invisibles","Chistina Rosenvinge","Nach",
-				"La Vela Puerca","Morodo","Os Paralamas Do Sucesso",
-				"Caligaris","Tronic","Vectores",
-				"Dënver","Nonpalidece","Tote King",
-				"Ile","Como Asesinar a Felipes","Churupaca",
-				"Planeta No","Habitación del Pánico","Playing for Change",
-				"Carla Morrison","Travis","Adrenalize & Demi Kanon",
-				"Atmozfears","Audiotricz","Bass Modulators",
-				"Da Tweekaz","Frontliner","Psyko Punkz",
-				"Sickddellz","TNT","Zany",
-				"B-Front","D-Stroyer","Danidemente",
-				"Deetox","DJ K-Oss","Donkey Rollers",
-				"Frequencerz","Technoboy","Tuneboy",
-				"DJ Jubert","Hans Noise","Kallki",
-				"Korsakoff","Mad Dog","Miss Offender",
-				"Under-X","9Milliz","B-Freqz",
-				"Hans Reverze Noise","Happy Tweekay","Rick Mitchells",
-				"Stormerz","Tricz","Yurner"));
+				"Fiis 2016", "DEFQON.1"));
 		int maxima = maximaDistancia(festivales);
 		System.out.println(maxima);
 		ArrayList<String> pivotes = seleccionPivotes(festivales,maxima,0.8);
@@ -186,13 +147,9 @@ public class SSS {
 			System.out.println(p);
 		}
 		
-		/*ArrayList<String> resultados = indiceSSS(pivotes,festivales,"Deetox",2);
+		ArrayList<String> resultados = buildSSS(pivotes,festivales,"Cremfields",2);
 		for(String r: resultados){
 			System.out.println(r);
-		}*/
-		/*String str1 = "income";
-		String str2 = "topographically";
-		System.out.println(levenshteinDistance(str1,str2));*/
+		}
 	}
-
 }
